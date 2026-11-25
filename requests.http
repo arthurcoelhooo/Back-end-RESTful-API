@@ -1,0 +1,151 @@
+@baseUrl = http://localhost:8080
+@apiKey = {{$dotenv API_KEY}}
+
+# Configure API_KEY no arquivo .env com a chave gerada em `go run ./cmd/genkey -nome "minha-chave"`.
+# Os exemplos de autenticação inválida/ausente abaixo devem retornar 401 de propósito.
+
+### Health check é público (espera 200)
+GET {{baseUrl}}/health
+
+### Listar receitas sem chave (espera 401)
+GET {{baseUrl}}/receitas
+
+### Listar receitas com chave inválida (espera 401)
+GET {{baseUrl}}/receitas
+X-API-Key: chave-errada
+
+### Criar receita sem chave (espera 401)
+POST {{baseUrl}}/receitas
+Content-Type: application/json
+
+{
+  "titulo": "Bolo de cenoura",
+  "categoria": "doce",
+  "ingredientes": "3 cenouras, 4 ovos, 1 xícara de óleo, 2 xícaras de açúcar, 2 e 1/2 xícaras de farinha",
+  "modo_preparo": "Bata no liquidificador as cenouras, os ovos e o óleo. Misture com o restante e asse por 40 minutos.",
+  "tempo_preparo_min": 60,
+  "porcoes": 12
+}
+
+### Criar receita válida (espera 201 + cabeçalho Location)
+POST {{baseUrl}}/receitas
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "Bolo de cenoura",
+  "categoria": "doce",
+  "ingredientes": "3 cenouras, 4 ovos, 1 xícara de óleo, 2 xícaras de açúcar, 2 e 1/2 xícaras de farinha",
+  "modo_preparo": "Bata no liquidificador as cenouras, os ovos e o óleo. Misture com o restante e asse por 40 minutos.",
+  "tempo_preparo_min": 60,
+  "porcoes": 12
+}
+
+### Criar receita com campos faltando (espera 400)
+POST {{baseUrl}}/receitas
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "Ab"
+}
+
+### Criar receita com valores inválidos: tempo negativo e categoria inexistente (espera 400)
+POST {{baseUrl}}/receitas
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "Receita estranha",
+  "categoria": "inexistente",
+  "ingredientes": "algo",
+  "modo_preparo": "faça algo",
+  "tempo_preparo_min": -5,
+  "porcoes": 0
+}
+
+### Criar receita com JSON malformado (espera 400)
+POST {{baseUrl}}/receitas
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{ "titulo": "quebrado",
+
+### Listar todas as receitas (espera 200)
+GET {{baseUrl}}/receitas
+X-API-Key: {{apiKey}}
+
+### Listar receitas filtrando por categoria (espera 200)
+GET {{baseUrl}}/receitas?categoria=doce
+X-API-Key: {{apiKey}}
+
+### Buscar receita existente (espera 200; ajuste o id)
+GET {{baseUrl}}/receitas/1
+X-API-Key: {{apiKey}}
+
+### Buscar receita inexistente (espera 404)
+GET {{baseUrl}}/receitas/99999
+X-API-Key: {{apiKey}}
+
+### Buscar com id inválido (espera 400)
+GET {{baseUrl}}/receitas/abc
+X-API-Key: {{apiKey}}
+
+### Atualizar receita existente (espera 200; ajuste o id)
+PUT {{baseUrl}}/receitas/1
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "Bolo de cenoura com cobertura",
+  "categoria": "doce",
+  "ingredientes": "3 cenouras, 4 ovos, 1 xícara de óleo, 2 xícaras de açúcar, 2 e 1/2 xícaras de farinha, chocolate",
+  "modo_preparo": "Bata, asse por 40 minutos e cubra com chocolate derretido.",
+  "tempo_preparo_min": 70,
+  "porcoes": 12
+}
+
+### Atualizar receita inexistente (espera 404)
+PUT {{baseUrl}}/receitas/99999
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "Não existe",
+  "categoria": "doce",
+  "ingredientes": "nada",
+  "modo_preparo": "nada",
+  "tempo_preparo_min": 10,
+  "porcoes": 1
+}
+
+### Atualizar com dados inválidos (espera 400)
+PUT {{baseUrl}}/receitas/1
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "titulo": "",
+  "categoria": "doce",
+  "ingredientes": "x",
+  "modo_preparo": "x",
+  "tempo_preparo_min": 0,
+  "porcoes": 1
+}
+
+### Atualizar sem chave (espera 401)
+PUT {{baseUrl}}/receitas/1
+Content-Type: application/json
+
+{ "titulo": "Sem chave" }
+
+### Excluir sem chave (espera 401)
+DELETE {{baseUrl}}/receitas/1
+
+### Excluir receita existente (espera 204; ajuste o id)
+DELETE {{baseUrl}}/receitas/1
+X-API-Key: {{apiKey}}
+
+### Excluir receita já excluída ou inexistente (espera 404)
+DELETE {{baseUrl}}/receitas/1
+X-API-Key: {{apiKey}}
